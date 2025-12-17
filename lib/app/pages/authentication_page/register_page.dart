@@ -72,7 +72,8 @@ class _RegisterPageState extends State<RegisterPage> {
   void initState() {
     super.initState();
 
-    if (PublicData.apiConfigData['selectRolesDuringRegistration'] != null) {
+    if (PublicData.apiConfigData != null &&
+        PublicData.apiConfigData['selectRolesDuringRegistration'] != null) {
       selectRolesDuringRegistration = ((PublicData
               .apiConfigData['selectRolesDuringRegistration']) as List<dynamic>)
           .toList();
@@ -540,17 +541,66 @@ class _RegisterPageState extends State<RegisterPage> {
 
                               if (registerConfig?.registerMethod == 'email') {
                                 if (isChecked) {
+                                  try {
+                                    Map? res = await AuthenticationService
+                                        .registerWithEmail(
+                                            // email
+                                            registerConfig?.registerMethod ??
+                                                '',
+                                            mailController.text.trim(),
+                                            passwordController.text.trim(),
+                                            retypePasswordController.text
+                                                .trim(),
+                                            accountType,
+                                            registerConfig?.formFields?.fields,
+                                            phoneController.text.trim(),
+                                            countryCode.dialCode.toString());
+
+                                    if (res != null) {
+                                      if (res['step'] == 'stored' ||
+                                          res['step'] == 'go_step_2') {
+                                        nextRoute(VerifyCodePage.pageName,
+                                            arguments: {
+                                              'user_id': res['user_id'],
+                                              'email':
+                                                  mailController.text.trim(),
+                                              'countryCode': countryCode
+                                                  .dialCode
+                                                  .toString(),
+                                              'mobile':
+                                                  phoneController.text.trim(),
+                                              'password': passwordController
+                                                  .text
+                                                  .trim(),
+                                              'retypePassword':
+                                                  retypePasswordController.text
+                                                      .trim(),
+                                            });
+                                      } else if (res['step'] == 'go_step_3') {
+                                        nextRoute(MainPage.pageName,
+                                            arguments: res['user_id']);
+                                      }
+                                    }
+                                  } catch (e) {
+                                    // Error already handled in the service method
+                                    print('Registration error: $e');
+                                  }
+                                } else {
+                                  showSnackBar(ErrorEnum.error,
+                                      appText.termsPoliciesAlert);
+                                }
+                              } else {
+                                try {
                                   Map? res = await AuthenticationService
-                                      .registerWithEmail(
-                                          // email
+                                      .registerWithPhone(
+                                          // mobile
                                           registerConfig?.registerMethod ?? '',
-                                          mailController.text.trim(),
+                                          countryCode.dialCode.toString(),
+                                          phoneController.text.trim(),
                                           passwordController.text.trim(),
                                           retypePasswordController.text.trim(),
                                           accountType,
-                                          registerConfig?.formFields?.fields,
-                                          phoneController.text.trim(),
-                                          countryCode.dialCode.toString());
+                                          registerConfig?.formFields?.fields);
 
                                   if (res != null) {
                                     if (res['step'] == 'stored' ||
@@ -558,59 +608,26 @@ class _RegisterPageState extends State<RegisterPage> {
                                       nextRoute(VerifyCodePage.pageName,
                                           arguments: {
                                             'user_id': res['user_id'],
-                                            'email': mailController.text.trim(),
                                             'countryCode':
                                                 countryCode.dialCode.toString(),
-                                            'mobile':
+                                            'phone':
                                                 phoneController.text.trim(),
                                             'password':
                                                 passwordController.text.trim(),
                                             'retypePassword':
                                                 retypePasswordController.text
-                                                    .trim(),
+                                                    .trim()
                                           });
                                     } else if (res['step'] == 'go_step_3') {
+                                      locator<PageProvider>()
+                                          .setPage(PageNames.home);
                                       nextRoute(MainPage.pageName,
                                           arguments: res['user_id']);
                                     }
                                   }
-                                }else{
-                                  showSnackBar(ErrorEnum.error,
-                                        '${appText.termsPoliciesAlert}');
-                                }
-                              } else {
-                                Map? res = await AuthenticationService
-                                    .registerWithPhone(
-                                        // mobile
-                                        registerConfig?.registerMethod ?? '',
-                                        countryCode.dialCode.toString(),
-                                        phoneController.text.trim(),
-                                        passwordController.text.trim(),
-                                        retypePasswordController.text.trim(),
-                                        accountType,
-                                        registerConfig?.formFields?.fields);
-
-                                if (res != null) {
-                                  if (res['step'] == 'stored' ||
-                                      res['step'] == 'go_step_2') {
-                                    nextRoute(VerifyCodePage.pageName,
-                                        arguments: {
-                                          'user_id': res['user_id'],
-                                          'countryCode':
-                                              countryCode.dialCode.toString(),
-                                          'phone': phoneController.text.trim(),
-                                          'password':
-                                              passwordController.text.trim(),
-                                          'retypePassword':
-                                              retypePasswordController.text
-                                                  .trim()
-                                        });
-                                  } else if (res['step'] == 'go_step_3') {
-                                    locator<PageProvider>()
-                                        .setPage(PageNames.home);
-                                    nextRoute(MainPage.pageName,
-                                        arguments: res['user_id']);
-                                  }
+                                } catch (e) {
+                                  // Error already handled in the service method
+                                  print('Registration error: $e');
                                 }
                               }
 

@@ -53,7 +53,7 @@ class _SplashPageState extends State<SplashPage>
 
       Timer(const Duration(seconds: 3), () async {
         final List<ConnectivityResult> connectivityResult =
-        await (Connectivity().checkConnectivity());
+            await (Connectivity().checkConnectivity());
 
         if (connectivityResult.contains(ConnectivityResult.none)) {
           nextRoute(InternetConnectionPage.pageName, isClearBackRoutes: true);
@@ -75,8 +75,6 @@ class _SplashPageState extends State<SplashPage>
           }
         }
       });
-
-
     });
 
     GuestService.config();
@@ -88,16 +86,15 @@ class _SplashPageState extends State<SplashPage>
       body: Container(
         width: getSize().width,
         height: getSize().height,
-        decoration:  BoxDecoration(
-          borderRadius: const BorderRadius.all(const Radius.circular(5)),
-          color: white(),
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(5)),
+          color: Color(0xff358935),
           // image: DecorationImage(
           //   image: AssetImage(AppAssets.splashPng),
           //   fit: BoxFit.cover,
           // ),
         ),
-        child:
-        Center(
+        child: Center(
           child: Container(
             height: getSize().height / 2,
             width: getSize().width,
@@ -127,14 +124,15 @@ class _SplashPageState extends State<SplashPage>
                       height: 400,
                       width: 400,
                       decoration: const BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage(AppAssets.splash_logo_png),
+                          image: DecorationImage(
+                            image: AssetImage(
+                                'assets/image/png/logo-without-background.png'),
                             fit: BoxFit.cover,
                           ),
-                          borderRadius: BorderRadius.all(Radius.circular(50))
-                      ),)
-                        // child: Image.asset(AppAssets.splash_logo_png, height: 200,))
-                ),
+                          borderRadius: BorderRadius.all(Radius.circular(50))),
+                    )
+                    // child: Image.asset(AppAssets.splash_logo_png, height: 200,))
+                    ),
               ],
             ),
           ),
@@ -234,8 +232,6 @@ class _SplashPageState extends State<SplashPage>
         //     // )
         //   ],
         // ),
-
-
       ),
     );
   }

@@ -8,73 +8,56 @@ import 'package:webinar/common/utils/error_handler.dart';
 import 'package:webinar/common/utils/http_handler.dart';
 import 'package:http/http.dart';
 
-class AuthenticationService{
-
-  static Future google(String email,String token, String name)async{
-    try{
+class AuthenticationService {
+  static Future google(String email, String token, String name) async {
+    try {
       String url = '${Constants.baseUrl}google/callback';
 
-      Response res = await httpPost(
-        url, 
-        {
-          'email': email,
-          'name': name,
-          'id': token,
-        }
-      );
+      Response res = await httpPost(url, {
+        'email': email,
+        'name': name,
+        'id': token,
+      });
 
       print(res.body);
 
-      if(res.statusCode == 200){
+      if (res.statusCode == 200) {
         await AppData.saveAccessToken(jsonDecode(res.body)['data']['token']);
         return true;
-      }else{
-
+      } else {
         return false;
       }
-
-    }catch(e){
+    } catch (e) {
       return false;
     }
   }
 
-  static Future facebook(String email, String token, String name)async{
-    try{
+  static Future facebook(String email, String token, String name) async {
+    try {
       String url = '${Constants.baseUrl}facebook/callback';
 
-      Response res = await httpPost(
-        url, 
-        {
-          'id': token,
-          'name': name,
-          'email': email
-        }
-      );
+      Response res =
+          await httpPost(url, {'id': token, 'name': name, 'email': email});
 
       var jsonResponse = jsonDecode(res.body);
-      if(jsonResponse['success']){
+      if (jsonResponse['success']) {
         await AppData.saveAccessToken(jsonDecode(res.body)['data']['token']);
         return true;
-      }else{
-        
+      } else {
         return false;
       }
-
-    }catch(e){
+    } catch (e) {
       return false;
     }
   }
 
-  static Future login(String username, String password)async{
-    try{
+  static Future login(String username, String password) async {
+    try {
       String url = '${Constants.baseUrl}login';
 
       Response res = await httpPost(
-        url, 
-        {
-          'username': username,
-          'password': password
-        },
+        url,
+        {'username': username, 'password': password},
         // headers: {
         //   'x-api-key' : Constants.apiKey,
         //   'Content-Type' : 'application/json',
@@ -86,79 +69,91 @@ class AuthenticationService{
       log(res.body.toString());
 
       var jsonResponse = jsonDecode(res.body);
-      if(jsonResponse['success']){
+      if (jsonResponse['success']) {
         await AppData.saveAccessToken(jsonResponse['data']['token']);
         print(jsonResponse['data']['user_id']);
         print("jsonResponse['data']['user_id']");
         await AppData.saveEmail(username);
         await AppData.saveName('');
         return true;
-      }else{
-        ErrorHandler().showError(ErrorEnum.error, jsonResponse,readMessage: true);
+      } else {
+        ErrorHandler()
+            .showError(ErrorEnum.error, jsonResponse, readMessage: true);
         return false;
       }
-
-    }catch(e){
+    } catch (e) {
       return false;
     }
   }
 
-  static Future<Map?> registerWithEmail(String registerMethod,String email, String password,String repeatPassword, String? accountType, List<Fields>? fields,String phoneNumber,String countryCode )async{
-    try{
+  static Future<Map?> registerWithEmail(
+      String registerMethod,
+      String email,
+      String password,
+      String repeatPassword,
+      String? accountType,
+      List<Fields>? fields,
+      String phoneNumber,
+      String countryCode) async {
+    try {
       String url = '${Constants.baseUrl}register/step/1';
 
       Map body = {
         "register_method": registerMethod,
         "country_code": countryCode,
-        "mobile" : phoneNumber,
+        "mobile": phoneNumber,
         'email': email,
         'password': password,
         'password_confirmation': repeatPassword
       };
-      
-      if(fields != null){
+
+      if (fields != null) {
         Map bodyFields = {};
         for (var i = 0; i < fields.length; i++) {
-          if(fields[i].type != 'upload'){
-            bodyFields.addEntries(
-              {
-                fields[i].id: (fields[i].type == 'toggle') 
-                  ? fields[i].userSelectedData == null ? 0 : 1
+          if (fields[i].type != 'upload') {
+            bodyFields.addEntries({
+              fields[i].id: (fields[i].type == 'toggle')
+                  ? fields[i].userSelectedData == null
+                      ? 0
+                      : 1
                   : fields[i].userSelectedData
-              }.entries
-            );
+            }.entries);
           }
         }
 
-        body.addEntries({'fields': bodyFields.toString()}.entries);        
+        body.addEntries({'fields': bodyFields.toString()}.entries);
       }
 
-      Response res = await httpPost(
-        url, 
-        body
-      );
+      Response res = await httpPost(url, body);
       print(res.body);
       print("res after httpPost");
 
       var jsonResponse = jsonDecode(res.body);
-      if( jsonResponse['success'] || jsonResponse['status'] == 'go_step_2' || jsonResponse['status'] == 'go_step_3' ){
-
+      if (jsonResponse['success'] ||
+          jsonResponse['status'] == 'go_step_2' ||
+          jsonResponse['status'] == 'go_step_3') {
         return {
           'user_id': jsonResponse['data']['user_id'],
           'step': jsonResponse['status']
         };
-      }else{
+      } else {
         ErrorHandler().showError(ErrorEnum.error, jsonResponse);
         return null;
       }
-
-    }catch(e){
+    } catch (e) {
       return null;
     }
   }
 
-  static Future<Map?> registerWithPhone(String registerMethod,String countryCode, String mobile, String password,String repeatPassword, String? accountType, List<Fields>? fields)async{
-    // try{
+  static Future<Map?> registerWithPhone(
+      String registerMethod,
+      String countryCode,
+      String mobile,
+      String password,
+      String repeatPassword,
+      String? accountType,
+      List<Fields>? fields) async {
+    try {
       String url = '${Constants.baseUrl}register/step/1';
 
       Map body = {
@@ -168,132 +163,133 @@ class AuthenticationService{
         'password': password,
         'password_confirmation': repeatPassword,
       };
-      
-      if(fields != null){
+
+      if (fields != null) {
         Map bodyFields = {};
         for (var i = 0; i < fields.length; i++) {
-          if(fields[i].type != 'upload'){
-            bodyFields.addEntries(
-              {
-                fields[i].id: (fields[i].type == 'toggle') 
-                  ? fields[i].userSelectedData == null ? 0 : 1
+          if (fields[i].type != 'upload') {
+            bodyFields.addEntries({
+              fields[i].id: (fields[i].type == 'toggle')
+                  ? fields[i].userSelectedData == null
+                      ? 0
+                      : 1
                   : fields[i].userSelectedData
-              }.entries
-            );
+            }.entries);
           }
         }
 
-        body.addEntries({'fields': bodyFields.toString()}.entries);        
+        body.addEntries({'fields': bodyFields.toString()}.entries);
       }
 
-      Response res = await httpPost(
-        url, 
-        body
-      );
+      Response res = await httpPost(url, body);
 
       print(res.body);
 
+      // Check if response is valid JSON
+      if (res.body.trim().isEmpty || res.body.trim().startsWith('<')) {
+        // Response is HTML or empty, not JSON
+        ErrorHandler().showError(ErrorEnum.error,
+            {'message': 'Server error. Please try again later.'},
+            readMessage: true);
+        return null;
+      }
+
       var jsonResponse = jsonDecode(res.body);
-       if( jsonResponse['success'] || jsonResponse['status'] == 'go_step_2' || jsonResponse['status'] == 'go_step_3' ){ // || stored
-        
+      if (jsonResponse['success'] ||
+          jsonResponse['status'] == 'go_step_2' ||
+          jsonResponse['status'] == 'go_step_3') {
+        // || stored
+
         return {
           'user_id': jsonResponse['data']['user_id'],
           'step': jsonResponse['status']
         };
-      }else{
+      } else {
         ErrorHandler().showError(ErrorEnum.error, jsonResponse);
         return null;
       }
-
-    // }catch(e){
-    //   return null;
-    // }
+    } catch (e) {
+      // Handle JSON decode errors and other exceptions
+      if (e is FormatException) {
+        ErrorHandler().showError(ErrorEnum.error,
+            {'message': 'Server error. Please try again later.'},
+            readMessage: true);
+      } else {
+        ErrorHandler().showError(ErrorEnum.error,
+            {'message': 'An error occurred. Please try again.'},
+            readMessage: true);
+      }
+      return null;
+    }
   }
-  
-  static Future<bool> forgetPassword(String email)async{
-    try{
+
+  static Future<bool> forgetPassword(String email) async {
+    try {
       String url = '${Constants.baseUrl}forget-password';
 
-      Response res = await httpPost(
-        url, 
-        {
-          "email": email
-        }
-      );
+      Response res = await httpPost(url, {"email": email});
 
       log(res.body.toString());
 
       var jsonResponse = jsonDecode(res.body);
-      if(jsonResponse['success']){
-        
-        ErrorHandler().showError(ErrorEnum.success, jsonResponse, readMessage: true);
+      if (jsonResponse['success']) {
+        ErrorHandler()
+            .showError(ErrorEnum.success, jsonResponse, readMessage: true);
         return true;
-      }else{
+      } else {
         ErrorHandler().showError(ErrorEnum.error, jsonResponse);
         return false;
       }
-
-    }catch(e){
+    } catch (e) {
       return false;
     }
   }
-  
-  static Future<bool> verifyCode(int userId,String code)async{
-    try{
+
+  static Future<bool> verifyCode(int userId, String code) async {
+    try {
       String url = '${Constants.baseUrl}register/step/2';
 
-      Response res = await httpPost(
-        url, 
-        {
-          "user_id": userId.toString(),
-          "code": code,
-        }
-      );
+      Response res = await httpPost(url, {
+        "user_id": userId.toString(),
+        "code": code,
+      });
 
       log(res.body.toString());
 
       var jsonResponse = jsonDecode(res.body);
-      if(jsonResponse['success']){
-        
+      if (jsonResponse['success']) {
         return true;
-      }else{
+      } else {
         ErrorHandler().showError(ErrorEnum.error, jsonResponse);
         return false;
       }
-
-    }catch(e){
+    } catch (e) {
       return false;
     }
   }
-  
-  static Future<bool> registerStep3(int userId, String name, String referralCode)async{
-    try{
+
+  static Future<bool> registerStep3(
+      int userId, String name, String referralCode) async {
+    try {
       String url = '${Constants.baseUrl}register/step/3';
 
-      Response res = await httpPost(
-        url, 
-        {
-          "user_id": userId.toString(),
-          "full_name": name,
-          "referral_code": referralCode
-        }
-      );
-
+      Response res = await httpPost(url, {
+        "user_id": userId.toString(),
+        "full_name": name,
+        "referral_code": referralCode
+      });
 
       var jsonResponse = jsonDecode(res.body);
-      if(jsonResponse['success']){
+      if (jsonResponse['success']) {
         await AppData.saveAccessToken(jsonResponse['data']['token']);
         await AppData.saveName(name);
         return true;
-      }else{
+      } else {
         ErrorHandler().showError(ErrorEnum.error, jsonResponse);
         return false;
       }
-
-    }catch(e){
+    } catch (e) {
       return false;
     }
   }
-
-  
 }

@@ -29,6 +29,10 @@ subprojects {
                 }
             }
         }
+        // Disable -Werror to allow builds with obsolete Java version warnings
+        project.tasks.withType(JavaCompile).configureEach {
+            options.compilerArgs.remove('-Werror')
+        }
     }
 }
 
