@@ -22,7 +22,7 @@ class CourseService{
     bool discount=false, bool downloadable=false, String? sort, String? type,
     String? cat, bool reward=false, bool bundle=false, List<int>? filterOption, })async{
     List<CourseModel> data = [];
-    // try{
+    try{
       String url = '${Constants.baseUrl}${bundle ? 'bundles' : 'courses'}?offset=$offset&limit=10';
 
       if(upcoming) url += '&upcoming=1';
@@ -44,8 +44,21 @@ class CourseService{
       print("url Courses");
 
       Response res = await httpGet(url);
-        
-      var jsonRes = jsonDecode(res.body);
+      
+      // Check if response is successful and contains valid JSON
+      if (res.statusCode != 200) {
+        log('Error: HTTP ${res.statusCode} - ${res.body}');
+        return data;
+      }
+
+      // Check if response body is HTML instead of JSON
+      final body = res.body.trim();
+      if (body.isEmpty || body.startsWith('<')) {
+        log('Error: Received HTML instead of JSON - ${body.substring(0, body.length > 100 ? 100 : body.length)}');
+        return data;
+      }
+
+      var jsonRes = jsonDecode(body);
       
 
       if (jsonRes['success'] ?? false) {
@@ -67,9 +80,10 @@ class CourseService{
         return data;
       }
 
-    // }catch(e){
-    //   return data;
-    // }
+    }catch(e){
+      log('Error in CourseService.getAll: $e');
+      return data;
+    }
   }
 
 
@@ -84,8 +98,21 @@ class CourseService{
         url,
         isSendToken: true
       );
+      
+      // Check if response is successful and contains valid JSON
+      if (res.statusCode != 200) {
+        log('Error: HTTP ${res.statusCode} - ${res.body}');
+        return null;
+      }
+
+      // Check if response body is HTML instead of JSON
+      final body = res.body.trim();
+      if (body.isEmpty || body.startsWith('<')) {
+        log('Error: Received HTML instead of JSON - ${body.substring(0, body.length > 100 ? 100 : body.length)}');
+        return null;
+      }
         
-      var jsonRes = jsonDecode(res.body);
+      var jsonRes = jsonDecode(body);
 
       if (jsonRes['success'] ?? false) {
         return SingleCourseModel.fromJson( 
@@ -100,12 +127,13 @@ class CourseService{
 
 
     }catch(e){
+      log('Error in CourseService.getOverviewCourseData: $e');
       return null;
     }
   }
 
   static Future<SingleCourseModel?> getSingleCourseData(int id,bool isBundle,{bool isPrivate=false})async{
-    // try{
+    try{
 
       String url = '${Constants.baseUrl}${isPrivate ? 'panel/webinars' : isBundle ? 'bundles' : 'courses'}/$id';
       print(url);
@@ -115,8 +143,21 @@ class CourseService{
         url,
         isSendToken: true
       );
+      
+      // Check if response is successful and contains valid JSON
+      if (res.statusCode != 200) {
+        log('Error: HTTP ${res.statusCode} - ${res.body}');
+        return null;
+      }
+
+      // Check if response body is HTML instead of JSON
+      final body = res.body.trim();
+      if (body.isEmpty || body.startsWith('<')) {
+        log('Error: Received HTML instead of JSON - ${body.substring(0, body.length > 100 ? 100 : body.length)}');
+        return null;
+      }
         
-      var jsonRes = jsonDecode(res.body);
+      var jsonRes = jsonDecode(body);
 
       if (jsonRes['success'] ?? false) {
         return SingleCourseModel.fromJson( 
@@ -130,9 +171,10 @@ class CourseService{
       }
 
 
-    // }catch(e){
-    //   return null;
-    // }
+    }catch(e){
+      log('Error in CourseService.getSingleCourseData: $e');
+      return null;
+    }
   }
 
   static Future<List<CourseModel>> featuredCourse({String? cat,})async{
